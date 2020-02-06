@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible">
+
+    <title>Tag der offenen Tür</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+        integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <link rel="icon" href="https://www.htl-leonding.at/wp-content/uploads/2018/12/cropped-htllogo-2-130x130.png?x81861"
+        sizes="32x32" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/css/index.css">
+
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="stylesheet" href="style/snackbar.css">
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous">
+        </script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous">
+        </script>
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+        integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous">
+        </script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+        integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.min.js"></script>
+</head>
+
+<body>
+    <script src="js/three.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/dat.gui.min.js"></script>
+    <script src="js/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+    <script src="js/MTLLoader.js"></script>
+    <script src="js/LoaderSupport.js"></script>
+    <script src="js/OBJLoader.js"></script>
+    <script src="js/own/path.js"></script>
+    <script src="js/papaparse.js"></script>
+    <script src="js/own/floorSelection.js"></script>
+    <script src="js/own/movement.js"></script>
+    <script src="js/own/selectObjects.js"></script>
+    <script src="js/own/loadModel.js"></script>
+    <script src="js/own/getData.js"></script>
+    <script src="js/own/tooltip.js"></script>
+    <script src="js/own/snackBar.js"></script>
+    <script src="js/own/rest.js"></script>
+    <script src="js/own/getPathsToRoom.js"></script>
+    <script src="https://unpkg.com/mqtt@3.0.0/dist/mqtt.min.js"></script>
+
+
+    <script type="text/javascript">
+        $(window).on('load', function () {
+            // $('#greetingModal').modal({  //prevent from closing when clicking outside
+            //     backdrop: 'static',
+            //     keyboard: false
+            // });
+        });
+    </script>
+
+    <div class="modal fade" id="architectureModal" tabindex="-1" role="dialog" aria-labelledby="greetingModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-own modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body" style="text-align: center;">
+                    <img src="architecture.png">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar" class="active">
+            <span id="sidebar_objects">
+                <ul class="list-unstyled components">
+                    <li>
+                        <a aria-expanded="false" id="objectModeExited" class="cursor" onclick="exhibitModeExited()">
+                            <i class="fas fa-times fa-2x"></i>
+                            Schließen
+                        </a>
+                    </li>
+                </ul>
+                <ul class="list-unstyled CTAs ">
+                    <label for="searchField">Suche:</label>
+                    <input type="search" id="searchField" oninput="onSearchFieldInput()"
+                        class="form-control searchField col-12" placeholder="Name / Raum" aria-label="Username">
+                    <hr>
+                    <span id="items-wrapper" class="col-12 noPadding"></span>
+            </span>
+            </ul>
+            </span>
+            <span id="sidebar_elements">
+                <ul class="list-unstyled components">
+                    <li>
+                        <a id="sidebarCollapse" class="cursor">
+                            <i class="fas fa-arrows-alt-h fa-2x"></i>
+                            Menü
+                        </a>
+                    </li>
+                    <li>
+                        <a href="" aria-expanded="false">
+                            <i class="fas fa-redo fa-2x"></i>
+                            Laden
+                        </a>
+                    </li>
+                    <li>
+                        <a aria-expanded="false" class="cursor" id="reposition" onclick=ProjectConfig()>
+                            <i class="fas fa-map-marker-alt fa-2x"></i>
+                            Standort
+                        </a>
+                    </li>
+                    <li>
+                        <a aria-expanded="false" class="cursor" id="reposition" onclick=repositionCamera()>
+                            <i class="fas fa-school fa-2x"></i>
+                            Alles
+                        </a>
+                    </li>
+                    <li>
+                        <a aria-expanded="false" class="cursor" id="scaleMode" onclick=exhibitModeEnabled()>
+                            <i class="fas fa-graduation-cap fa-2x"></i>
+                            Tadeot
+                        </a>
+                    </li>
+                </ul>
+                <ul class="list-unstyled CTAs">
+                    <li>
+                        <a href="https://github.com/philippAuinger/htl-leonding-3D-tadeot" class="download">GitHub -
+                            Repository</a>
+                    </li>
+                </ul>
+            </span>
+            <span id="sidebar_credits">
+                <ul class="list-unstyled CTAs">
+                    <li>
+                        <img src="credits_image.jpg" class="col-12">
+                        <p style="color: white; font-size: 10pt; text-align:center;">Philipp Auinger & Nenad
+                            Tripi&#x0107; <br> Informatik 5BHIF</p>
+                    </li>
+                </ul>
+            </span>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content" class="content">
+            <div id="tooltips" class="tooltips">
+            </div>
+
+            <div id="standort" class="tooltip standort" style="display:none"></div>
+
+            <div class="keyboardLayout col-4">
+                <div id="keyboard" class="simple-keyboard"></div>
+            </div>
+
+            <div class="buttons floorSelection">
+                <button type="" id="cellar" class="smallButton"
+                    onclick="floorSelect('cellar'); hideStandort(); normalFloorSelection(); MODE='ROOM'; ">U</button>
+                <button type="" id="ground_floor" class="smallButton"
+                    onclick="floorSelect('ground_floor'); hideStandort(); normalFloorSelection(); MODE='ROOM'">E</button>
+                <button type="" id="first_floor" class="smallButton"
+                    onclick="floorSelect('first_floor'); showStandort(); normalFloorSelection(); MODE='ROOM'">1</button>
+                <button type="" id="second_floor" class="smallButton"
+                    onclick="floorSelect('second_floor'); hideStandort(); normalFloorSelection(); MODE='ROOM'">2</button>
+                <button type="" id="ceiling" class="smallButton active" active="true"
+                    onclick="floorSelect('ceiling'); hideStandort(); normalFloorSelection(); MODE='FLOOR';">A</button>
+                <!-- The actual snackbar -->
+                <div id="snackbar">Wetter: 27°C, Luftdruck: 1 bar, Luftfeuchtigk.: 25%</div>
+            </div>
+            <div class="departmentSelection">
+                <input class="departmentButton" type="image" src="logos/Informatik_small.png"
+                    onclick="departmentSelect('Informatik')" />
+                <input class="departmentButton" type="image" src="logos/Medientechnik_small.png"
+                    onclick="departmentSelect('Medientechnik')" />
+                <input class="departmentButton" type="image" src="logos/Elektronik_small.png"
+                    onclick="departmentSelect('Elektronik')" />
+                <input class="departmentButton" type="image" src="logos/Medizintechnik_small.png"
+                    onclick="departmentSelect('Medizintechnik')" />
+            </div>
+            <div id="descCard" class="card cardSelection col-2">
+                <div class="container">
+                    <p></p>
+                    <h4 id="teacherName" class="teacherHeader">Lehrer Name</h4>
+                    <p id="teacherDesc" style="color:white"></p>
+                </div>
+            </div>
+            <div class="floorDisplay">
+                <h2 id="floorDisplay">Erdgeschoss</h2>
+            </div>
+            <div id="abteilungsImg" class="abteilungImageDisplay">
+                <img src="logos/Abteilungen.png" height="150" width="450">
+            </div>
+            <div class="clickButtonDisplay">
+                <button type="" id="clickModeBtn" tabindex="-1" class="smallButtonClickable smallButtonClicked" onclick="changeClickMode();">
+                    <i class="fas fa-hand-point-up"></i>
+                </button>
+            </div>
+        </div>
+
+        <script>
+            var YOUR_CLICKABLE_OBJECTS = [];
+            var TOOLTIP = document.querySelector(".tooltip");
+            var objects = [];
+            var objectsUp = [];
+            var objectsUpName = [];
+            var movingIndex;
+            var currentlyMoving = false;
+            var mov;
+            var floors = ['cellar', 'ground_floor', 'first_floor', 'second_floor', 'ceiling'];
+            var objectArr = [];
+            var visableRooms;
+            var visableFloorName;
+            var mousev, raycaster, scene, renderer, controls, loader;
+            var temperature;
+            var humidity;
+            var co2;
+            var light;
+            var floorButton;
+            var objectSelected;
+            var content = document.querySelector('.content');
+            var selectedRoom;
+            var white;
+            var randomColor;
+            var lastClick;
+            var position;
+            var raycaster;
+            var mouse3D;
+            var mouse;
+            var renderer;
+            var camera;
+            var scene;
+            var raycaster;
+            var clock;
+            var allRooms = [];
+            var path;
+            var ENABLEDBUTTONS = true;
+            var sphere;
+            var STANDORT_VISIBLE = false;
+            var TOOLTIP_VISIBLE = true;
+            var filteredExhibits;
+            var currentlySelectedFloor = "ceiling";
+            var objectsData = [];
+            latestMouseIntersection = undefined;
+            var MODE = "FLOOR";
+            var needsUpdate = true; //load the background
+            var exhibts;
+            var ANIMATING = false;
+            var CHOOSING = false;
+            var standort = document.getElementById("standort");
+            var exhibitsWithDepartment = [];
+            var selectedDepartment;
+            var CLICKABLE = true;
+            var line;
+            var client;
+            init();
+            animate();
+            loadModel();
+            loadMqtt();
+            function init() {
+                $("#sidebar_objects").hide();
+                $("#descCard").hide();
+                $("#keyboard").hide();
+                $("#abteilungsImg").hide();
+                $("#floorDisplay").hide();
+                mouse = new THREE.Vector2();
+                raycaster = new THREE.Raycaster();
+                white = new THREE.Color();
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color("rgb(69,90,100)");
+                var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.4);
+                hemiLight.position.set(0, 500, 0);
+                scene.add(hemiLight);
+                var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                dirLight.position.set(-1, 0.75, 1);
+                dirLight.position.multiplyScalar(50);
+                dirLight.name = "dirlight";
+                scene.add(dirLight);
+                dirLight.castShadow = true;
+                dirLight.shadow.mapSize.width = dirLight.shadow.mapSize.height = 1024 * 2;
+                var d = 300;
+                dirLight.shadow.camera.left = -d;
+                dirLight.shadow.camera.right = d;
+                dirLight.shadow.camera.top = d;
+                dirLight.shadow.camera.bottom = -d;
+                dirLight.shadow.camera.far = 3500;
+                dirLight.shadow.bias = -0.0001;
+                raycaster = new THREE.Raycaster();
+                clock = new THREE.Clock();
+                renderer = new THREE.WebGLRenderer({
+                    antialias: true
+                });
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight)
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                document.getElementById("content").appendChild(renderer.domElement);
+                camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 500, 50000);
+                camera.position.set(12000, 4000, 7000);
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.25;
+                controls.screenSpacePanning = false;
+                controls.minDistance = 10;
+                controls.maxDistance = 25000;
+                controls.maxPolarAngle = Math.PI / 2;
+                controls.rotateSpeed = 0.2;
+                var geometry = new THREE.SphereGeometry(80, 32, 32);
+                var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                sphere = new THREE.Mesh(geometry, material);
+                // raum
+                sphere.position.x = -3435;
+                sphere.position.y = 331 + 70;
+                sphere.position.z = -550;
+                // console.log(sphere);
+                // aula
+                // sphere.position.x = 1125;
+                // sphere.position.y = 317 + 70;
+                // sphere.position.z = -993;
+                // sphere.visible = false;
+                scene.add(sphere);
+                window.addEventListener('resize', onWindowResize, false);
+                window.top.addEventListener("mousedown", onDocumentMouseDown, false);
+                window.top.addEventListener("mouseup", onDocumentMouseUp, false);
+                window.top.addEventListener('touchstart', onDocumentTouchDown, false);
+                window.top.addEventListener('touchend', onDocumentTouchEnd, false);
+                window.addEventListener('mousemove', onMouseMove, false);
+                $("#searchField").on('input', onSearchFieldInput, false);
+                $("#searchField").on('focus', onSeachFieldFocus);
+                controls.addEventListener('change', onControlsChange);
+                // $('#clickModeBtn').on('touchstart', changeClickMode);
+            }
+            function onSearchFieldInput() {
+                console.log("Input");
+                var searchName = $("#searchField").val().toLowerCase();
+                if ($("#searchField").val()) {
+                    let filteredExhibits;
+                    filteredExhibits = exhibits.filter(t => t.name.toLowerCase().includes(searchName) || t.room.name.toLowerCase().includes(searchName));
+                    attachNewTeacherList(filteredExhibits);
+                } else {
+                    attachNewTeacherList(exhibits);
+                }
+            }
+
+            function onSeachFieldFocus() {
+                $("#keyboard").show();
+                $("#abteilungsImg").hide();
+                $("#searchField").val('');
+                myKeyboard.input.default = '';
+                onSearchFieldInput();
+            }
+
+            let Keyboard = window.SimpleKeyboard.default;
+
+            let myKeyboard = new Keyboard({
+                onChange: input => onChange(input),
+                onKeyPress: button => onKeyPress(button)
+            });
+
+            function onChange(input) {
+                document.getElementById("searchField").value = input;
+                onSearchFieldInput();
+                //console.log("Input changed", input);
+            }
+
+            function onKeyPress(button) {
+                //console.log("Button pressed", button);
+            }
+
+            function ProjectConfig() {
+                //Elternsprechtag things
+                sphere.visible = true;
+                STANDORT_VISIBLE = true;
+                //choose first_floor als default
+                floorSelect('first_floor');
+                camera.position.set(9430, 7247, 3737);
+                controls.target.x = -709;
+                controls.target.y = -3;
+                controls.target.z = -3000;
+                $("#floorDisplay").show();
+                showStandort();
+                exhibitModeEnabled();
+            }
+
+            function changeClickMode(){
+                if(CLICKABLE){
+                    CLICKABLE = false;
+                    $("#clickModeBtn").removeClass("smallButtonClicked");
+                }else{
+                    CLICKABLE = true;
+                    $("#clickModeBtn").addClass("smallButtonClicked");
+                }
+            }
+
+            function repositionCamera() {
+                TOOLTIP_VISIBLE = true;
+                camera.position.set(12000, 4000, 7000);
+                controls.target.x = -1829.3479371096257;
+                controls.target.y = -1.6066683324679777e-14;
+                controls.target.z = -2828.006467964322;
+                controls.update();
+            }
+
+            function attachNewTeacherList(list) {
+                $("#items-wrapper").empty();
+                addItemsToHTML(list);
+            }
+            function hideStandort() {
+                STANDORT_VISIBLE = false;
+                standort.style.display = "none";
+                sphere.visible = false;
+            }
+            function normalFloorSelection() {
+                $("#descCard").hide();
+                hideTooltip();
+            }
+            function showStandort() {
+                STANDORT_VISIBLE = true;
+                standort.style.display = "block";
+                sphere.visible = true;
+                //!!! === IMPORTANT ===
+                // DIV element is positioned here
+                var canvasHalfWidth = renderer.domElement.offsetWidth / 2;
+                var canvasHalfHeight = renderer.domElement.offsetHeight / 2;
+                var tooltipPosition = sphere.position.clone().project(camera);
+                tooltipPosition.x =
+                    tooltipPosition.x * canvasHalfWidth +
+                    canvasHalfWidth +
+                    renderer.domElement.offsetLeft;
+                tooltipPosition.y =
+                    -(tooltipPosition.y * canvasHalfHeight) +
+                    canvasHalfHeight +
+                    renderer.domElement.offsetTop;
+                var tootipWidth = standort.offsetWidth;
+                var tootipHeight = standort.offsetHeight;
+                standort.style.left = `${tooltipPosition.x - tootipWidth / 2}px`;
+                standort.style.top = `${tooltipPosition.y - tootipHeight - 5}px`;
+                standort.style.opacity = 1.00;
+                standort.innerHTML = 'Ihr Standort';
+            }
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                needsUpdate = true;
+                TOOLTIP_VISIBLE = true;
+            }
+            function onMouseMove(event) {
+                event.preventDefault();
+                needsUpdate = true;
+            }
+            function exhibitModeEnabled() {
+                hideTooltip();
+                filterVisableRooms();
+                //to unfold the Navbar
+                needsUpdate = true;
+                TOOLTIP_VISIBLE = true;
+                $('#sidebar').attr("class", "");
+                $('#sidebar').css("min-width", "20%");
+                $('#sidebar').css("max-width", "20%");
+                $('#sidebar').css("overflow-y", "auto");
+                $("#sidebar_elements").hide();
+                $("#sidebar_objects").show();
+                $("#abteilungsImg").show();
+                controls.target.x = -1829.3479371096257;
+                controls.target.y = -1.6066683324679777e-14;
+                controls.target.z = -2828.006467964322;
+                controls.update();
+            }
+            function exhibitModeExited() {
+                MODE = "ROOM";
+                TOOLTIP_VISIBLE = true;
+                $('#sidebar').css("min-width", "250px");
+                $('#sidebar').css("max-width", "250px");
+                $('#sidebar').css("overflow-y", "hidden");
+                needsUpdate = true;
+                $("#sidebar_elements").show();
+                $("#sidebar_objects").hide();
+                $("#keyboard").hide();
+                $("#abteilungsImg").hide();
+            }
+            function shouldRender() {
+                // Do we need to draw a new frame? //there is space for more attributes 
+                if (needsUpdate || ANIMATING || CHOOSING) {
+                    needsUpdate = false;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            function animate() {
+                var delay = 50;
+                setTimeout(function () {
+                    requestAnimationFrame(animate);
+                }, delay);
+                render();
+            };
+            function render() {
+                //if (shouldRender()) {
+                renderer.clear();
+                renderer.render(scene, camera);
+                if (STANDORT_VISIBLE) {
+                    showStandort();
+                }
+                if (TOOLTIP_VISIBLE) {
+                    showTooltip();
+                }
+                TWEEN.update();
+                //}
+            }
+            $(document).ready(function () {
+                needsUpdate = true;
+            });
+        </script>
+        <script>
+            // SIDEBAR
+            $(document).ready(function () {
+                $('#sidebarCollapse').on('click', function () {
+                    $('#sidebar').toggleClass('active');
+                    $("#scale-menu").hide();
+                    TOOLTIP_VISIBLE = true;
+                });
+            });
+        </script>
+</body>
+
+</html>
